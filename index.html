@@ -1,97 +1,89 @@
-<div class="donation-container" style="text-align: center; max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px;">
-    <h2>Support Our Campaign</h2>
-    
-    <!-- Step 1: Donation Amount Selection -->
-    <div id="amountSelection">
-        <button type="button" class="donation-option" data-amount="100">$100</button>
-        <button type="button" class="donation-option" data-amount="500">$500</button>
-        <button type="button" class="donation-option" data-amount="1000">$1000</button>
-        <input type="number" id="donationAmount" placeholder="Enter amount" min="1" max="3300" required>
-        <button type="button" id="nextStepButton">Donate</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donation Widget</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Support Our Campaign</h2>
+        <form id="donationForm">
+            <button type="button" class="donation-option" data-amount="100">$100</button>
+            <button type="button" class="donation-option" data-amount="500">$500</button>
+            <button type="button" class="donation-option" data-amount="1000">$1000</button>
+            <input type="number" id="donationAmount" placeholder="Enter amount" min="1" max="3300" required>
+            <button type="submit">Donate</button>
+        </form>
+
+        <div id="userDetails" class="hidden">
+            <h3>Enter Your Details</h3>
+            <input type="text" id="firstName" placeholder="First Name" required>
+            <input type="text" id="lastName" placeholder="Last Name" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <button id="confirmDonation">Confirm Donation</button>
+        </div>
+
+        <p id="message" class="hidden">Goal Reached! Thank you for your support.</p>
     </div>
 
-    <!-- Step 2: Personal Details & Payment -->
-    <div id="userInfoPage" style="display: none;">
-        <h3>Enter Your Information</h3>
-        <input type="text" id="firstName" placeholder="First Name" required>
-        <input type="text" id="lastName" placeholder="Last Name" required>
-        <input type="email" id="email" placeholder="Email" required>
+    <script>
+        const GOOGLE_SHEET_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL"; // Replace with your Google Apps Script URL
+        let donationAmount = 0;
 
-        <h3>Payment Information</h3>
-        <input type="text" id="cardNumber" placeholder="Card Number" required>
-        <input type="text" id="expiryDate" placeholder="MM/YY" required>
-        <input type="text" id="cvc" placeholder="CVC" required>
-        
-        <button type="button" id="finalDonateButton">Confirm Donation</button>
-    </div>
-
-    <!-- Goal Reached Message -->
-    <p id="goalReachedMessage" style="display:none; color: red; font-weight: bold;">🎉 Goal Reached! Thank you for your support. No more donations accepted. 🎉</p>
-</div>
-
-<script>
-    let totalRaised = 0; // Tracks the total donations received
-    const goalAmount = 3300;
-
-    // Set up quick donation buttons
-    document.querySelectorAll('.donation-option').forEach(button => {
-        button.addEventListener('click', function() {
-            document.getElementById('donationAmount').value = this.getAttribute('data-amount');
+        document.querySelectorAll('.donation-option').forEach(button => {
+            button.addEventListener('click', function() {
+                document.getElementById('donationAmount').value = this.getAttribute('data-amount');
+            });
         });
-    });
 
-    // Show the personal details & payment section after clicking "Donate"
-    document.getElementById('nextStepButton').addEventListener('click', function() {
-        let amount = parseFloat(document.getElementById('donationAmount').value);
+        document.getElementById("donationForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+            donationAmount = parseFloat(document.getElementById("donationAmount").value);
+            if (isNaN(donationAmount) || donationAmount <= 0 || donationAmount > 3300) return;
 
-        // Check if the donation pushes us past the goal
-        if (totalRaised + amount > goalAmount) {
-            alert("Sorry, this donation exceeds the campaign goal. No more donations accepted.");
-            return;
-        }
+            // Fetch total donations from Google Sheets
+            let response = await fetch(GOOGLE_SHEET_URL);
+            let data = await response.json();
 
-        if (isNaN(amount) || amount <= 0 || amount > 3300) {
-            alert("Please enter a valid donation amount (between $1 and $3,300).");
-            return;
-        }
+            if (data.total + donationAmount > 3300) {
+                alert("Donation goal reached! Thank you for your support.");
+                return;
+            }
 
-        // Store the selected donation amount
-        document.getElementById('amountSelection').style.display = 'none';
-        document.getElementById('userInfoPage').style.display = 'block';
-    });
+            // Show user details form
+            document.getElementById("donationForm").classList.add("hidden");
+            document.getElementById("userDetails").classList.remove("hidden");
+        });
 
-    // Handle final donation confirmation
-    document.getElementById('finalDonateButton').addEventListener('click', function(event) {
-        event.preventDefault();
+        document.getElementById("confirmDonation").addEventListener("click", async function () {
+            let firstName = document.getElementById("firstName").value;
+            let lastName = document.getElementById("lastName").value;
+            let email = document.getElementById("email").value;
 
-        let firstName = document.getElementById('firstName').value.trim();
-        let lastName = document.getElementById('lastName').value.trim();
-        let email = document.getElementById('email').value.trim();
-        let cardNumber = document.getElementById('cardNumber').value.trim();
-        let expiryDate = document.getElementById('expiryDate').value.trim();
-        let cvc = document.getElementById('cvc').value.trim();
-        let donationAmount = parseFloat(document.getElementById('donationAmount').value);
+            if (!firstName || !lastName || !email) {
+                alert("Please fill in all fields.");
+                return;
+            }
 
-        if (!firstName || !lastName || !email || !cardNumber || !expiryDate || !cvc) {
-            alert("Please fill in all fields.");
-            return;
-        }
+            // Send donation data to Google Sheets
+            await fetch(GOOGLE_SHEET_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ firstName, lastName, email, amount: donationAmount })
+            });
 
-        // Update total raised
-        totalRaised += donationAmount;
+            alert("Donation successful! Thank you.");
+            window.location.reload();
+        });
+    </script>
 
-        // Check if we reached the goal
-        if (totalRaised >= goalAmount) {
-            document.getElementById('amountSelection').style.display = 'none';
-            document.getElementById('userInfoPage').style.display = 'none';
-            document.getElementById('goalReachedMessage').style.display = 'block';
-        } else {
-            // Reset form for next donor
-            document.getElementById('userInfoPage').style.display = 'none';
-            document.getElementById('amountSelection').style.display = 'block';
-        }
-
-        alert(`Thank you, ${firstName} ${lastName}, for your donation of $${donationAmount}!`);
-    });
-
-</script>
+</body>
+</html>
