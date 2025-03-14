@@ -28,6 +28,14 @@
             <input type="text" id="firstName" placeholder="First Name" required>
             <input type="text" id="lastName" placeholder="Last Name" required>
             <input type="email" id="email" placeholder="Email" required>
+
+            <div id="paymentInfo" class="hidden">
+                <h3>Payment Information</h3>
+                <input type="text" id="cardNumber" placeholder="Card Number" required>
+                <input type="text" id="expiryDate" placeholder="MM/YY" required>
+                <input type="text" id="cvv" placeholder="CVV" required>
+            </div>
+
             <button id="confirmDonation">Confirm Donation</button>
         </div>
 
@@ -46,7 +54,7 @@
 
         document.getElementById("donationForm").addEventListener("submit", async function (event) {
             event.preventDefault();
-            console.log("Donate button clicked!"); // Debugging step
+            console.log("Donate button clicked!");
 
             donationAmount = parseFloat(document.getElementById("donationAmount").value);
             if (isNaN(donationAmount) || donationAmount <= 0 || donationAmount > 3300) {
@@ -75,7 +83,7 @@
             }
         });
 
-        document.getElementById("confirmDonation").addEventListener("click", async function () {
+        document.getElementById("confirmDonation").addEventListener("click", function () {
             let firstName = document.getElementById("firstName").value;
             let lastName = document.getElementById("lastName").value;
             let email = document.getElementById("email").value;
@@ -85,20 +93,8 @@
                 return;
             }
 
-            try {
-                console.log("Sending donation details to Google Sheets...");
-                await fetch(GOOGLE_SHEET_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ firstName, lastName, email, amount: donationAmount })
-                });
-
-                alert("Donation successful! Thank you.");
-                window.location.reload();
-            } catch (error) {
-                console.error("Error submitting donation:", error);
-                alert("Error submitting donation. Please try again later.");
-            }
+            // Show payment section after entering details
+            document.getElementById("paymentInfo").classList.remove("hidden");
         });
     </script>
 
