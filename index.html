@@ -1,0 +1,97 @@
+<div class="donation-container" style="text-align: center; max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px;">
+    <h2>Support Our Campaign</h2>
+    
+    <!-- Step 1: Donation Amount Selection -->
+    <div id="amountSelection">
+        <button type="button" class="donation-option" data-amount="100">$100</button>
+        <button type="button" class="donation-option" data-amount="500">$500</button>
+        <button type="button" class="donation-option" data-amount="1000">$1000</button>
+        <input type="number" id="donationAmount" placeholder="Enter amount" min="1" max="3300" required>
+        <button type="button" id="nextStepButton">Donate</button>
+    </div>
+
+    <!-- Step 2: Personal Details & Payment -->
+    <div id="userInfoPage" style="display: none;">
+        <h3>Enter Your Information</h3>
+        <input type="text" id="firstName" placeholder="First Name" required>
+        <input type="text" id="lastName" placeholder="Last Name" required>
+        <input type="email" id="email" placeholder="Email" required>
+
+        <h3>Payment Information</h3>
+        <input type="text" id="cardNumber" placeholder="Card Number" required>
+        <input type="text" id="expiryDate" placeholder="MM/YY" required>
+        <input type="text" id="cvc" placeholder="CVC" required>
+        
+        <button type="button" id="finalDonateButton">Confirm Donation</button>
+    </div>
+
+    <!-- Goal Reached Message -->
+    <p id="goalReachedMessage" style="display:none; color: red; font-weight: bold;">🎉 Goal Reached! Thank you for your support. No more donations accepted. 🎉</p>
+</div>
+
+<script>
+    let totalRaised = 0; // Tracks the total donations received
+    const goalAmount = 3300;
+
+    // Set up quick donation buttons
+    document.querySelectorAll('.donation-option').forEach(button => {
+        button.addEventListener('click', function() {
+            document.getElementById('donationAmount').value = this.getAttribute('data-amount');
+        });
+    });
+
+    // Show the personal details & payment section after clicking "Donate"
+    document.getElementById('nextStepButton').addEventListener('click', function() {
+        let amount = parseFloat(document.getElementById('donationAmount').value);
+
+        // Check if the donation pushes us past the goal
+        if (totalRaised + amount > goalAmount) {
+            alert("Sorry, this donation exceeds the campaign goal. No more donations accepted.");
+            return;
+        }
+
+        if (isNaN(amount) || amount <= 0 || amount > 3300) {
+            alert("Please enter a valid donation amount (between $1 and $3,300).");
+            return;
+        }
+
+        // Store the selected donation amount
+        document.getElementById('amountSelection').style.display = 'none';
+        document.getElementById('userInfoPage').style.display = 'block';
+    });
+
+    // Handle final donation confirmation
+    document.getElementById('finalDonateButton').addEventListener('click', function(event) {
+        event.preventDefault();
+
+        let firstName = document.getElementById('firstName').value.trim();
+        let lastName = document.getElementById('lastName').value.trim();
+        let email = document.getElementById('email').value.trim();
+        let cardNumber = document.getElementById('cardNumber').value.trim();
+        let expiryDate = document.getElementById('expiryDate').value.trim();
+        let cvc = document.getElementById('cvc').value.trim();
+        let donationAmount = parseFloat(document.getElementById('donationAmount').value);
+
+        if (!firstName || !lastName || !email || !cardNumber || !expiryDate || !cvc) {
+            alert("Please fill in all fields.");
+            return;
+        }
+
+        // Update total raised
+        totalRaised += donationAmount;
+
+        // Check if we reached the goal
+        if (totalRaised >= goalAmount) {
+            document.getElementById('amountSelection').style.display = 'none';
+            document.getElementById('userInfoPage').style.display = 'none';
+            document.getElementById('goalReachedMessage').style.display = 'block';
+        } else {
+            // Reset form for next donor
+            document.getElementById('userInfoPage').style.display = 'none';
+            document.getElementById('amountSelection').style.display = 'block';
+        }
+
+        alert(`Thank you, ${firstName} ${lastName}, for your donation of $${donationAmount}!`);
+    });
+
+</script>
