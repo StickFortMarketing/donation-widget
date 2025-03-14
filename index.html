@@ -35,7 +35,7 @@
     </div>
 
     <script>
-        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbw3WU2rvhzkVkhcbPio3h89od_nWycb-FKLyrzKtCK4xOUiRjb0j_9shgjbq4jvPFNr/exec"; // Replace with your Google Apps Script URL
+        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbw3WU2rvhzkVkhcbPio3h89od_nWycb-FKLyrzKtCK4xOUiRjb0j_9shgjbq4jvPFNr/exec";
         let donationAmount = 0;
 
         document.querySelectorAll('.donation-option').forEach(button => {
@@ -47,20 +47,26 @@
         document.getElementById("donationForm").addEventListener("submit", async function (event) {
             event.preventDefault();
             donationAmount = parseFloat(document.getElementById("donationAmount").value);
+            
             if (isNaN(donationAmount) || donationAmount <= 0 || donationAmount > 3300) return;
 
-            // Fetch total donations from Google Sheets
-            let response = await fetch(GOOGLE_SHEET_URL);
-            let data = await response.json();
+            try {
+                let response = await fetch(GOOGLE_SHEET_URL);
+                if (!response.ok) throw new Error("Failed to fetch data");
 
-            if (data.total + donationAmount > 3300) {
-                alert("Donation goal reached! Thank you for your support.");
-                return;
+                let data = await response.json();
+
+                if (data.total + donationAmount > 3300) {
+                    alert("Donation goal reached! Thank you for your support.");
+                    return;
+                }
+
+                document.getElementById("donationForm").classList.add("hidden");
+                document.getElementById("userDetails").classList.remove("hidden");
+            } catch (error) {
+                console.error("Error fetching donation data:", error);
+                alert("Error checking donation total. Please try again later.");
             }
-
-            // Show user details form
-            document.getElementById("donationForm").classList.add("hidden");
-            document.getElementById("userDetails").classList.remove("hidden");
         });
 
         document.getElementById("confirmDonation").addEventListener("click", async function () {
@@ -73,15 +79,19 @@
                 return;
             }
 
-            // Send donation data to Google Sheets
-            await fetch(GOOGLE_SHEET_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ firstName, lastName, email, amount: donationAmount })
-            });
+            try {
+                await fetch(GOOGLE_SHEET_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ firstName, lastName, email, amount: donationAmount })
+                });
 
-            alert("Donation successful! Thank you.");
-            window.location.reload();
+                alert("Donation successful! Thank you.");
+                window.location.reload();
+            } catch (error) {
+                console.error("Error submitting donation:", error);
+                alert("Error submitting donation. Please try again later.");
+            }
         });
     </script>
 
