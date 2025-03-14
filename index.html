@@ -28,8 +28,9 @@
             <input type="text" id="firstName" placeholder="First Name" required>
             <input type="text" id="lastName" placeholder="Last Name" required>
             <input type="email" id="email" placeholder="Email" required>
-            <button id="confirmDonation">Confirm Donation</button>    
-    <div>
+            <button id="confirmDonation">Confirm Donation</button>
+        </div>
+
         <div id="paymentDetails" class="hidden">
             <h3>Enter Payment Information</h3>
             <input type="text" id="cardNumber" placeholder="Card Number" required>
@@ -42,7 +43,7 @@
     </div>
 
     <script>
-        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbz3LFrb_m52rnfvI9P5nPH9eJebCjfxzEsK1HoEQ_038LLtQHLp1g80rb_kY_PFKHRa4Q/exec";
+        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwX46oZGUF0VCYuBwbARHETIfGO7d3yGL3U0p3-yVi23vOpC666K6lEiI68nS8JL5_AnQ/exec";
         let donationAmount = 0;
 
         document.querySelectorAll('.donation-option').forEach(button => {
